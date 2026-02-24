@@ -381,6 +381,60 @@
     }
 
     /* ============================================
+   KEYWORDS SECTION (NEW)
+   ============================================ */
+    .keywords-section {
+      margin-top: 1.5rem;
+    }
+
+    .keyword-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+
+    .kw-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .kw-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 24px;
+    }
+
+    .kw-title {
+      font-family: var(--font-heading);
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-heading);
+    }
+
+    .kw-tags {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .kw-tag {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .kw-body {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    /* ============================================
    HISTORY
    ============================================ */
     .history-section {
@@ -472,6 +526,10 @@
 
       .chart-section {
         margin-bottom: 0;
+      }
+
+      .keyword-cards {
+        grid-template-columns: 1fr;
       }
 
       .history-section {
@@ -598,6 +656,32 @@
             </div>
           </div>
         </section>
+
+        <!-- KEYWORDS SECTION (NEW) -->
+        <section class="keywords-section" id="keywords-section" style="display:none;">
+          <div class="keyword-cards">
+            <div class="kw-card">
+              <div class="kw-header">
+                <span class="kw-title">行星</span>
+              </div>
+              <div class="kw-body" id="kw-planet-body"></div>
+            </div>
+            <div class="kw-card">
+              <div class="kw-header">
+                <span class="kw-title">星座</span>
+                <span class="kw-tags" id="kw-sign-tags"></span>
+              </div>
+              <div class="kw-body" id="kw-sign-body"></div>
+            </div>
+            <div class="kw-card">
+              <div class="kw-header">
+                <span class="kw-title">宮位</span>
+                <span class="kw-tags" id="kw-house-tags"></span>
+              </div>
+              <div class="kw-body" id="kw-house-body"></div>
+            </div>
+          </div>
+        </section>
       </div>
 
       <!-- Right: History -->
@@ -618,38 +702,47 @@
        DATA
        ============================================ */
     const PLANETS = [
-      { name: '太陽', symbol: '☉\uFE0E' },
-      { name: '月亮', symbol: '☽\uFE0E' },
-      { name: '水星', symbol: '☿\uFE0E' },
-      { name: '金星', symbol: '♀\uFE0E' },
-      { name: '火星', symbol: '♂\uFE0E' },
-      { name: '木星', symbol: '♃\uFE0E' },
-      { name: '土星', symbol: '♄\uFE0E' },
-      { name: '天王星', symbol: '♅\uFE0E' },
-      { name: '海王星', symbol: '♆\uFE0E' },
-      { name: '冥王星', symbol: '♇\uFE0E' },
+      { name: '太陽', symbol: '☉\uFE0E', keywords: '自我意識、生命力、核心動機、權力本質、陽性能量' },
+      { name: '月亮', symbol: '☽\uFE0E', keywords: '情緒反應、潛意識、安全感、家庭根基、陰性能量' },
+      { name: '水星', symbol: '☿\uFE0E', keywords: '溝通表達、邏輯思考、學習模式、資訊交流、短程旅行' },
+      { name: '金星', symbol: '♀\uFE0E', keywords: '價值觀念、愛情關係、美學品味、物質享受、和諧感' },
+      { name: '火星', symbol: '♂\uFE0E', keywords: '行動意志、原始慾望、競爭生存、勇氣動能、攻擊性' },
+      { name: '木星', symbol: '♃\uFE0E', keywords: '擴張成長、幸運探索、信念哲學、高等教育、長途旅行' },
+      { name: '土星', symbol: '♄\uFE0E', keywords: '限制考驗、責任結構、恐懼業力、組織規範、時間法則' },
+      { name: '天王星', symbol: '♅\uFE0E', keywords: '變革顛覆、創新獨立、科技網路、突發狀態、疏離切割' },
+      { name: '海王星', symbol: '♆\uFE0E', keywords: '消融邊界、靈性夢幻、同理慈悲、沉溺逃避、藝術直覺' },
+      { name: '冥王星', symbol: '♇\uFE0E', keywords: '毀滅重生、權力控制、深層轉化、潛藏危機、極端執著' },
     ];
 
     const SIGNS = [
-      { name: '白羊座', symbol: '♈\uFE0E', element: 'fire' },
-      { name: '金牛座', symbol: '♉\uFE0E', element: 'earth' },
-      { name: '雙子座', symbol: '♊\uFE0E', element: 'air' },
-      { name: '巨蟹座', symbol: '♋\uFE0E', element: 'water' },
-      { name: '獅子座', symbol: '♌\uFE0E', element: 'fire' },
-      { name: '處女座', symbol: '♍\uFE0E', element: 'earth' },
-      { name: '天秤座', symbol: '♎\uFE0E', element: 'air' },
-      { name: '天蠍座', symbol: '♏\uFE0E', element: 'water' },
-      { name: '射手座', symbol: '♐\uFE0E', element: 'fire' },
-      { name: '摩羯座', symbol: '♑\uFE0E', element: 'earth' },
-      { name: '水瓶座', symbol: '♒\uFE0E', element: 'air' },
-      { name: '雙魚座', symbol: '♓\uFE0E', element: 'water' },
+      { name: '白羊座', symbol: '♈\uFE0E', element: 'fire', keywords: '開創、競爭、衝動、率直、個人主義' },
+      { name: '金牛座', symbol: '♉\uFE0E', element: 'earth', keywords: '務實、累積、固執、享受、感官體驗' },
+      { name: '雙子座', symbol: '♊\uFE0E', element: 'air', keywords: '好奇、多變、靈活、交流、資訊傳遞' },
+      { name: '巨蟹座', symbol: '♋\uFE0E', element: 'water', keywords: '滋養、防禦、懷舊、歸屬、情感波動' },
+      { name: '獅子座', symbol: '♌\uFE0E', element: 'fire', keywords: '展現、榮耀、慷慨、自尊、戲劇化' },
+      { name: '處女座', symbol: '♍\uFE0E', element: 'earth', keywords: '分析、服務、完美、秩序、批判性' },
+      { name: '天秤座', symbol: '♎\uFE0E', element: 'air', keywords: '平衡、關係、協商、美感、猶豫不決' },
+      { name: '天蠍座', symbol: '♏\uFE0E', element: 'water', keywords: '洞察、秘密、轉化、掌控、危機感' },
+      { name: '射手座', symbol: '♐\uFE0E', element: 'fire', keywords: '探索、樂觀、宏觀、自由、不受拘束' },
+      { name: '摩羯座', symbol: '♑\uFE0E', element: 'earth', keywords: '建構、紀律、野心、世俗、延遲滿足' },
+      { name: '水瓶座', symbol: '♒\uFE0E', element: 'air', keywords: '冷靜、群體、社群、理性、集體主義' },
+      { name: '雙魚座', symbol: '♓\uFE0E', element: 'water', keywords: '包容、融合、犧牲、混沌、無界限' },
     ];
 
-    const HOUSES = Array.from({ length: 12 }, (_, i) => ({
-      name: `第 ${i + 1} 宮`,
-      number: i + 1,
-      label: `${i + 1}`,
-    }));
+    const HOUSES = [
+      { name: '第 1 宮', number: 1, label: '1', keywords: '自我、人格面具、第一印象' },
+      { name: '第 2 宮', number: 2, label: '2', keywords: '個人價值、正財收入、物質所有物' },
+      { name: '第 3 宮', number: 3, label: '3', keywords: '溝通思維、語言表達、手足、鄰近環境、學習、短途旅行' },
+      { name: '第 4 宮', number: 4, label: '4', keywords: '家庭根基、祖先、晚年生活、父親' },
+      { name: '第 5 宮', number: 5, label: '5', keywords: '創造力、戀愛、遊戲、子女、投機偏財' },
+      { name: '第 6 宮', number: 6, label: '6', keywords: '日常工作、健康狀態、服務、部屬、寵物' },
+      { name: '第 7 宮', number: 7, label: '7', keywords: '一對一關係、婚姻、伴侶、公開的敵人、合作對象' },
+      { name: '第 8 宮', number: 8, label: '8', keywords: '深層轉化、他人錢財、危機、潛意識' },
+      { name: '第 9 宮', number: 9, label: '9', keywords: '高等教育、異國探索、哲學信仰、法律' },
+      { name: '第 10 宮', number: 10, label: '10', keywords: '社會地位、事業成就、公眾形象、母親' },
+      { name: '第 11 宮', number: 11, label: '11', keywords: '社群、願景、社會網路' },
+      { name: '第 12 宮', number: 12, label: '12', keywords: '業力因果、隱藏的敵人、苦難、鬼魂' },
+    ];
 
     /* ============================================
        RANDOM
@@ -683,6 +776,12 @@
     const resultText = document.getElementById('result-text');
     const chartSection = document.getElementById('chart-section');
     const chartPlaceholder = document.getElementById('chart-placeholder');
+    const keywordsSection = document.getElementById('keywords-section');
+    const kwPlanetBody = document.getElementById('kw-planet-body');
+    const kwSignTags = document.getElementById('kw-sign-tags');
+    const kwSignBody = document.getElementById('kw-sign-body');
+    const kwHouseTags = document.getElementById('kw-house-tags');
+    const kwHouseBody = document.getElementById('kw-house-body');
     const chartTitle = document.getElementById('chart-title');
     const chartSvg = document.getElementById('chart-svg');
     const historyList = document.getElementById('history-list');
@@ -789,8 +888,43 @@
 
       chartPlaceholder.style.display = 'none';
       chartSection.style.display = '';
+      keywordsSection.style.display = '';
 
       drawChart(result, ascIdx);
+
+      // --- Update Keywords Cards ---
+      kwPlanetBody.innerHTML = `
+        <div style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+          <span style="font-family: 'AstroSymbol', sans-serif; color: var(--planet-color); font-size: 1.1rem;">${p.symbol}</span>
+          <span style="color: var(--planet-color);">${p.name}</span>
+        </div>
+        <div style="font-weight: 400; font-size: 0.85rem; color: var(--text-body); line-height: 1.6;">${p.keywords}</div>
+      `;
+      kwSignBody.innerHTML = `
+        <div style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+          <span style="font-family: 'AstroSymbol', sans-serif; color: var(--sign-color); font-size: 1.1rem;">${s.symbol}</span>
+          <span style="color: var(--sign-color);">${s.name}</span>
+        </div>
+        <div style="font-weight: 400; font-size: 0.85rem; color: var(--text-body); line-height: 1.6;">${s.keywords}</div>
+      `;
+      kwHouseBody.innerHTML = `
+        <div style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+          <span style="color: var(--house-color);">${h.name}</span>
+        </div>
+        <div style="font-weight: 400; font-size: 0.85rem; color: var(--text-body); line-height: 1.6;">${h.keywords}</div>
+      `;
+
+      const elementNames = { fire: '火', earth: '土', air: '風', water: '水' };
+      const modalityNames = ['基本', '固定', '變動'];
+      const sModality = modalityNames[result.sign % 3];
+      const sElement = elementNames[s.element];
+      kwSignTags.innerHTML = `<span class="kw-tag">#${sModality}</span><span class="kw-tag">#${sElement}</span>`;
+
+      const houseTypes = ['角宮', '續宮', '果宮'];
+      const hType = houseTypes[result.house % 3];
+      const isMalefic = [2, 6, 8, 12].includes(h.number);
+      const hAuspice = isMalefic ? '凶宮' : '吉宮';
+      kwHouseTags.innerHTML = `<span class="kw-tag">#${hType}</span><span class="kw-tag">#${hAuspice}</span>`;
     }
 
     /* ============================================
