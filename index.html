@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>占星骰 - 蝕光占星｜Eclipsia Astrology</title>
+  <meta name="description" content="占星骰隨機模擬器，投擲行星、星座、宮位骰子，即時繪製星盤示意圖。">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'AstroSymbol';
+      src: url('https://eclipsia-astrology.com/wp-content/uploads/2026/02/Astrological_Symbol.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    /* ============================================
+   CSS RESET & VARIABLES (Eclipsia Style)
+   ============================================ */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-primary: #ffffff;
+      --bg-section: #f7f8fa;
+      --bg-card: #ffffff;
+      --text-heading: #2c2c2c;
+      --text-body: #4b4b4b;
+      --text-secondary: #6e7a8a;
+      --text-muted: #9ca8b7;
+      --accent-blue: #0071b7;
+      --accent-blue-hover: #005a93;
+      --accent-blue-light: rgba(0, 113, 183, 0.08);
+      --highlight-sign: rgba(0, 113, 183, 0.12);
+      --highlight-house: rgba(186, 155, 93, 0.15);
+      --sign-color: #0071b7;
+      --house-color: #b08d3e;
+      --planet-color: #2c2c2c;
+      --border-color: #e5e8ed;
+      --border-light: #eef0f4;
+      --font-heading: 'Crimson Text', Georgia, serif;
+      --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    html {
+      font-size: 16px;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg-primary);
+      color: var(--text-body);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.7;
+    }
+
+    /* ============================================
+   LAYOUT
+   ============================================ */
+    .app-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 4rem;
+    }
+
+    /* ============================================
+   HEADER
+   ============================================ */
+    .app-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .app-header h1 {
+      font-family: var(--font-heading);
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--text-heading);
+      letter-spacing: 0.02em;
+      line-height: 1.3;
+    }
+
+    .app-header p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      margin-top: 0.6rem;
+      font-weight: 400;
+    }
+
+    /* ============================================
+   DICE SECTION
+   ============================================ */
+    .dice-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .dice-row {
+      display: flex;
+      gap: 1.25rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .dice-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 1.25rem 1rem;
+      width: 160px;
+      text-align: center;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .dice-card.active {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(0, 113, 183, 0.1);
+    }
+
+    .dice-label {
+      font-family: var(--font-heading);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.06em;
+      margin-bottom: 0.75rem;
+    }
+
+    .dice-display {
+      position: relative;
+      width: 76px;
+      height: 76px;
+      margin: 0 auto 0.5rem;
+      perspective: 400px;
+    }
+
+    .dice-face {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-section);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 2rem;
+      color: var(--text-heading);
+      font-family: 'AstroSymbol', var(--font-body);
+      transition: transform 0.15s;
+    }
+
+    .dice-face.rolling {
+      animation: diceRollFast 0.1s linear infinite;
+      color: var(--accent-blue);
+    }
+
+    @keyframes diceRollFast {
+      0% {
+        transform: translateY(-5px) scale(1.05);
+        opacity: 0.6;
+        filter: blur(1px);
+      }
+
+      50% {
+        transform: translateY(0) scale(1.05);
+        opacity: 1;
+        filter: blur(0);
+      }
+
+      100% {
+        transform: translateY(5px) scale(1.05);
+        opacity: 0.6;
+        filter: blur(1px);
+      }
+    }
+
+    .dice-face.landed {
+      animation: diceLand 0.3s ease-out forwards;
+    }
+
+    @keyframes diceLand {
+      0% {
+        transform: scale(1.12);
+      }
+
+      50% {
+        transform: scale(0.96);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .dice-result-name {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 0.2rem;
+      min-height: 1.4em;
+      font-weight: 500;
+    }
+
+    /* ============================================
+   ROLL BUTTON (Eclipsia pill style)
+   ============================================ */
+    .roll-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.8rem 2.4rem;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: var(--font-body);
+      color: #ffffff;
+      background: var(--accent-blue);
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.25s;
+      box-shadow: 0 2px 8px rgba(0, 113, 183, 0.2);
+    }
+
+    .roll-btn:hover {
+      background: var(--accent-blue-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(0, 113, 183, 0.3);
+    }
+
+    .roll-btn:active {
+      transform: translateY(0);
+    }
+
+    .roll-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .roll-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ============================================
+   RESULT SUMMARY
+   ============================================ */
+    .result-summary {
+      background: var(--bg-section);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .result-summary .result-text {
+      font-family: var(--font-heading);
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text-heading);
+    }
+
+    .result-summary .result-text .planet-name {
+      color: var(--planet-color);
+      font-weight: 700;
+    }
+
+    .result-summary .result-text .sign-name {
+      color: var(--sign-color);
+    }
+
+    .result-summary .result-text .house-name {
+      color: var(--house-color);
+    }
+
+    /* ============================================
+   CHART SECTION
+   ============================================ */
+    /* ============================================
+   TWO-COLUMN LAYOUT
+   ============================================ */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+      align-items: start;
+      margin-bottom: 2.5rem;
+    }
+
+    .chart-section {
+      margin-bottom: 0;
+    }
+
+    .chart-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .chart-title {
+      font-family: var(--font-heading);
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-heading);
+      margin-bottom: 1.25rem;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .chart-title .asc-info {
+      color: var(--accent-blue);
+      font-weight: 600;
+    }
+
+    #chart-svg {
+      width: 100%;
+      max-width: 520px;
+      height: auto;
+    }
+
+    .chart-legend {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 1.25rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .legend-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* ============================================
+   PLACEHOLDER STATE
+   ============================================ */
+    .placeholder-msg {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      padding: 3rem 1rem;
+    }
+
+    .placeholder-msg .icon {
+      font-size: 2.2rem;
+      display: block;
+      margin-bottom: 0.6rem;
+    }
+
+    /* ============================================
+   HISTORY
+   ============================================ */
+    .history-section {
+      margin-bottom: 0;
+    }
+
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .history-header h2 {
+      font-family: var(--font-heading);
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-heading);
+    }
+
+    .history-clear-btn {
+      font-size: 0.75rem;
+      font-family: var(--font-body);
+      color: var(--text-muted);
+      background: none;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0.25rem 0.65rem;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .history-clear-btn:hover {
+      color: var(--text-secondary);
+      border-color: var(--text-secondary);
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .history-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .history-item:hover {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 2px rgba(0, 113, 183, 0.06);
+    }
+
+    .history-item .hi-result {
+      color: var(--text-heading);
+      font-weight: 500;
+      font-family: 'AstroSymbol', var(--font-body);
+    }
+
+    .history-item .hi-time {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    .empty-history {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      padding: 1rem;
+    }
+
+
+
+    /* ============================================
+   RESPONSIVE
+   ============================================ */
+    @media (max-width: 768px) {
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .chart-section {
+        margin-bottom: 0;
+      }
+
+      .history-section {
+        margin-bottom: 2rem;
+      }
+    }
+
+    @media (max-width: 540px) {
+      .app-container {
+        padding: 2rem 1rem 3rem;
+      }
+
+      .app-header h1 {
+        font-size: 1.6rem;
+      }
+
+      .dice-card {
+        width: 130px;
+        padding: 1rem 0.75rem;
+      }
+
+      .dice-display {
+        width: 64px;
+        height: 64px;
+      }
+
+      .dice-face {
+        font-size: 1.6rem;
+      }
+
+      .dice-row {
+        gap: 0.75rem;
+      }
+
+      .roll-btn {
+        padding: 0.7rem 2rem;
+        font-size: 0.95rem;
+      }
+
+      .chart-container {
+        padding: 1.25rem 1rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Main App -->
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <h1>占星骰</h1>
+      <p>擲出行星、星座、宮位，繪製你的星盤</p>
+    </header>
+
+    <!-- Dice -->
+    <section class="dice-section">
+      <div class="dice-row">
+        <div class="dice-card" id="dc-planet">
+          <div class="dice-label">行星</div>
+          <div class="dice-display">
+            <div class="dice-face" id="df-planet">?</div>
+          </div>
+          <div class="dice-result-name" id="dn-planet"></div>
+        </div>
+        <div class="dice-card" id="dc-sign">
+          <div class="dice-label">星座</div>
+          <div class="dice-display">
+            <div class="dice-face" id="df-sign">?</div>
+          </div>
+          <div class="dice-result-name" id="dn-sign"></div>
+        </div>
+        <div class="dice-card" id="dc-house">
+          <div class="dice-label">宮位</div>
+          <div class="dice-display">
+            <div class="dice-face" id="df-house">?</div>
+          </div>
+          <div class="dice-result-name" id="dn-house"></div>
+        </div>
+      </div>
+      <button class="roll-btn" id="roll-btn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <rect x="2" y="2" width="20" height="20" rx="4" />
+          <circle cx="8" cy="8" r="1.2" fill="currentColor" />
+          <circle cx="16" cy="8" r="1.2" fill="currentColor" />
+          <circle cx="12" cy="12" r="1.2" fill="currentColor" />
+          <circle cx="8" cy="16" r="1.2" fill="currentColor" />
+          <circle cx="16" cy="16" r="1.2" fill="currentColor" />
+        </svg>
+        擲骰
+      </button>
+    </section>
+
+    <!-- Result Summary -->
+    <section class="result-summary" id="result-summary" style="display:none;">
+      <div class="result-text" id="result-text"></div>
+    </section>
+
+    <!-- Two-Column Grid: Chart (left) + History (right) -->
+    <div class="content-grid">
+      <!-- Left: Chart -->
+      <div class="content-grid-left">
+        <section class="chart-section" id="chart-section" style="display:none;">
+          <div class="chart-container">
+            <div class="chart-title" id="chart-title"></div>
+            <svg id="chart-svg" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg"></svg>
+            <div class="chart-legend">
+              <div class="legend-item">
+                <div class="legend-swatch" style="background:rgba(0,113,183,0.18);"></div>
+                骰出位置
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Placeholder when no result -->
+        <section class="chart-section" id="chart-placeholder">
+          <div class="chart-container">
+            <div class="placeholder-msg">
+              <span class="icon">✦</span>
+              按下「擲骰」按鈕，開始你的占星之旅
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Right: History -->
+      <section class="history-section">
+        <div class="history-header">
+          <h2>歷史紀錄</h2>
+          <button class="history-clear-btn" id="clear-history-btn" type="button">清除</button>
+        </div>
+        <div class="history-list" id="history-list">
+          <div class="empty-history" id="empty-history">尚無紀錄</div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    /* ============================================
+       DATA
+       ============================================ */
+    const PLANETS = [
+      { name: '太陽', symbol: '☉\uFE0E' },
+      { name: '月亮', symbol: '☽\uFE0E' },
+      { name: '水星', symbol: '☿\uFE0E' },
+      { name: '金星', symbol: '♀\uFE0E' },
+      { name: '火星', symbol: '♂\uFE0E' },
+      { name: '木星', symbol: '♃\uFE0E' },
+      { name: '土星', symbol: '♄\uFE0E' },
+      { name: '天王星', symbol: '♅\uFE0E' },
+      { name: '海王星', symbol: '♆\uFE0E' },
+      { name: '冥王星', symbol: '♇\uFE0E' },
+    ];
+
+    const SIGNS = [
+      { name: '白羊座', symbol: '♈\uFE0E', element: 'fire' },
+      { name: '金牛座', symbol: '♉\uFE0E', element: 'earth' },
+      { name: '雙子座', symbol: '♊\uFE0E', element: 'air' },
+      { name: '巨蟹座', symbol: '♋\uFE0E', element: 'water' },
+      { name: '獅子座', symbol: '♌\uFE0E', element: 'fire' },
+      { name: '處女座', symbol: '♍\uFE0E', element: 'earth' },
+      { name: '天秤座', symbol: '♎\uFE0E', element: 'air' },
+      { name: '天蠍座', symbol: '♏\uFE0E', element: 'water' },
+      { name: '射手座', symbol: '♐\uFE0E', element: 'fire' },
+      { name: '摩羯座', symbol: '♑\uFE0E', element: 'earth' },
+      { name: '水瓶座', symbol: '♒\uFE0E', element: 'air' },
+      { name: '雙魚座', symbol: '♓\uFE0E', element: 'water' },
+    ];
+
+    const HOUSES = Array.from({ length: 12 }, (_, i) => ({
+      name: `第 ${i + 1} 宮`,
+      number: i + 1,
+      label: `${i + 1}`,
+    }));
+
+    /* ============================================
+       RANDOM
+       ============================================ */
+    function secureRandom(max) {
+      const arr = new Uint32Array(1);
+      crypto.getRandomValues(arr);
+      return arr[0] % max;
+    }
+
+    /* ============================================
+       STATE
+       ============================================ */
+    let currentResult = null;
+    let isRolling = false;
+
+    /* ============================================
+       DOM REFS
+       ============================================ */
+    const rollBtn = document.getElementById('roll-btn');
+    const dfPlanet = document.getElementById('df-planet');
+    const dfSign = document.getElementById('df-sign');
+    const dfHouse = document.getElementById('df-house');
+    const dnPlanet = document.getElementById('dn-planet');
+    const dnSign = document.getElementById('dn-sign');
+    const dnHouse = document.getElementById('dn-house');
+    const dcPlanet = document.getElementById('dc-planet');
+    const dcSign = document.getElementById('dc-sign');
+    const dcHouse = document.getElementById('dc-house');
+    const resultSummary = document.getElementById('result-summary');
+    const resultText = document.getElementById('result-text');
+    const chartSection = document.getElementById('chart-section');
+    const chartPlaceholder = document.getElementById('chart-placeholder');
+    const chartTitle = document.getElementById('chart-title');
+    const chartSvg = document.getElementById('chart-svg');
+    const historyList = document.getElementById('history-list');
+    const emptyHistory = document.getElementById('empty-history');
+    const clearHistoryBtn = document.getElementById('clear-history-btn');
+
+    /* ============================================
+       ROLL LOGIC
+       ============================================ */
+    rollBtn.addEventListener('click', startRoll);
+
+    function startRoll() {
+      if (isRolling) return;
+      isRolling = true;
+      rollBtn.disabled = true;
+
+      dcPlanet.classList.remove('active');
+      dcSign.classList.remove('active');
+      dcHouse.classList.remove('active');
+
+      dfPlanet.classList.remove('landed');
+      dfSign.classList.remove('landed');
+      dfHouse.classList.remove('landed');
+      dfPlanet.classList.add('rolling');
+      dfSign.classList.add('rolling');
+      dfHouse.classList.add('rolling');
+
+      const cycleInterval = 80;
+      const totalDuration = 3000;
+
+      const cycleTimer = setInterval(() => {
+        dfPlanet.textContent = PLANETS[secureRandom(PLANETS.length)].symbol;
+        dfSign.textContent = SIGNS[secureRandom(SIGNS.length)].symbol;
+        dfHouse.textContent = HOUSES[secureRandom(HOUSES.length)].label;
+      }, cycleInterval);
+
+      setTimeout(() => {
+        clearInterval(cycleTimer);
+
+        const pIdx = secureRandom(PLANETS.length);
+        const sIdx = secureRandom(SIGNS.length);
+        const hIdx = secureRandom(HOUSES.length);
+
+        currentResult = {
+          planet: pIdx,
+          sign: sIdx,
+          house: hIdx,
+          timestamp: Date.now(),
+        };
+
+        stopDice(dfPlanet, PLANETS[pIdx].symbol, dcPlanet, () => {
+          dnPlanet.textContent = PLANETS[pIdx].name;
+        });
+
+        setTimeout(() => {
+          stopDice(dfSign, SIGNS[sIdx].symbol, dcSign, () => {
+            dnSign.textContent = SIGNS[sIdx].name;
+          });
+        }, 150);
+
+        setTimeout(() => {
+          stopDice(dfHouse, HOUSES[hIdx].label, dcHouse, () => {
+            dnHouse.textContent = HOUSES[hIdx].name;
+          });
+
+          setTimeout(() => {
+            showResult(currentResult);
+            saveHistory(currentResult);
+            isRolling = false;
+            rollBtn.disabled = false;
+          }, 350);
+        }, 300);
+      }, totalDuration);
+    }
+
+    function stopDice(face, content, card, cb) {
+      face.classList.remove('rolling');
+      face.textContent = content;
+      face.classList.add('landed');
+      card.classList.add('active');
+      if (cb) cb();
+    }
+
+    /* ============================================
+       SHOW RESULT
+       ============================================ */
+    function showResult(result) {
+      const p = PLANETS[result.planet];
+      const s = SIGNS[result.sign];
+      const h = HOUSES[result.house];
+
+      resultText.innerHTML =
+        `<span class="planet-name"><span style="font-family: 'AstroSymbol', sans-serif;">${p.symbol}</span> ${p.name}</span>` +
+        ` 落入 ` +
+        `<span class="sign-name"><span style="font-family: 'AstroSymbol', sans-serif;">${s.symbol}</span> ${s.name}</span>` +
+        ` ` +
+        `<span class="house-name">${h.name}</span>`;
+      resultSummary.style.display = '';
+
+      const ascIdx = ((result.sign) - (result.house) + 12) % 12;
+      const ascSign = SIGNS[ascIdx];
+
+      chartTitle.innerHTML = `星盤`;
+
+      chartPlaceholder.style.display = 'none';
+      chartSection.style.display = '';
+
+      drawChart(result, ascIdx);
+    }
+
+    /* ============================================
+       SVG CHART DRAWING (Eclipsia Clean Style)
+       ============================================ */
+    function drawChart(result, ascIdx) {
+      const W = 600, CX = 300, CY = 300;
+      const R_OUTER = 250;
+      const R_SIGN_INNER = 187.5;
+      const R_HOUSE_INNER = 125;
+      const R_CENTER = 31.25;
+
+      chartSvg.innerHTML = '';
+
+      const defs = svgEl('defs');
+      chartSvg.appendChild(defs);
+
+      // Background circle - light clean fill
+      const bgCircle = svgEl('circle', {
+        cx: CX, cy: CY, r: R_OUTER + 6,
+        fill: '#f7f8fa',
+        stroke: '#dde1e8',
+        'stroke-width': 1,
+      });
+      chartSvg.appendChild(bgCircle);
+
+      // ---- SIGN RING (outer) ----
+      for (let i = 0; i < 12; i++) {
+        const signIdx = (ascIdx + i) % 12;
+        const startAngle = 180 + (i + 1) * 30;
+        const endAngle = 180 + i * 30;
+        const isHighlighted = signIdx === result.sign;
+
+        const path = arcPath(CX, CY, R_OUTER, R_SIGN_INNER, startAngle, endAngle);
+        const fill = isHighlighted ? 'rgba(0, 113, 183, 0.15)' : '#f0f2f6';
+        const stroke = isHighlighted ? 'rgba(0, 113, 183, 0.5)' : '#d0d5de';
+        const sector = svgEl('path', {
+          d: path,
+          fill: fill,
+          stroke: stroke,
+          'stroke-width': 1,
+        });
+        chartSvg.appendChild(sector);
+
+        // Sign symbol label
+        const midAngle = 180 + Math.floor(i * 30) + 15;
+        const labelR = (R_OUTER + R_SIGN_INNER) / 2;
+        const lx = CX + labelR * Math.cos(deg2rad(midAngle));
+        const ly = CY - labelR * Math.sin(deg2rad(midAngle));
+        const label = svgEl('text', {
+          x: lx, y: ly,
+          'text-anchor': 'middle',
+          'dominant-baseline': 'central',
+          fill: isHighlighted ? '#0071b7' : '#8a92a2',
+          'font-size': isHighlighted ? '19.2' : '16.8',
+          'font-weight': isHighlighted ? '700' : '400',
+          'font-family': "'AstroSymbol', 'Plus Jakarta Sans', sans-serif",
+        });
+        label.textContent = SIGNS[signIdx].symbol;
+        chartSvg.appendChild(label);
+      }
+
+      // ---- HOUSE RING (middle) ----
+      for (let i = 0; i < 12; i++) {
+        const startAngle = 180 + (i + 1) * 30;
+        const endAngle = 180 + i * 30;
+        const isHighlighted = i === result.house;
+
+        const path = arcPath(CX, CY, R_SIGN_INNER, R_HOUSE_INNER, startAngle, endAngle);
+        const fill = isHighlighted ? 'rgba(0, 113, 183, 0.15)' : '#f7f8fa';
+        const stroke = isHighlighted ? 'rgba(0, 113, 183, 0.5)' : '#d8dce4';
+        const sector = svgEl('path', {
+          d: path,
+          fill: fill,
+          stroke: stroke,
+          'stroke-width': 1,
+        });
+        chartSvg.appendChild(sector);
+
+        // House number label
+        const midAngle = 180 + Math.floor(i * 30) + 15;
+        const labelR = (R_SIGN_INNER + R_HOUSE_INNER) / 2;
+        const lx = CX + labelR * Math.cos(deg2rad(midAngle));
+        const ly = CY - labelR * Math.sin(deg2rad(midAngle));
+        const label = svgEl('text', {
+          x: lx, y: ly,
+          'text-anchor': 'middle',
+          'dominant-baseline': 'central',
+          fill: isHighlighted ? '#0071b7' : '#a0a8b6',
+          'font-size': isHighlighted ? '15' : '13',
+          'font-weight': isHighlighted ? '700' : '400',
+          'font-family': "'Plus Jakarta Sans', sans-serif",
+        });
+        label.textContent = HOUSES[i].label;
+        chartSvg.appendChild(label);
+      }
+      // ---- PLANET RING HIGHLIGHT (inner) ----
+      for (let i = 0; i < 12; i++) {
+        if (i === result.house) {
+          const startAngle = 180 + (i + 1) * 30;
+          const endAngle = 180 + i * 30;
+          const path = arcPath(CX, CY, R_HOUSE_INNER, R_CENTER, startAngle, endAngle);
+          const sector = svgEl('path', {
+            d: path,
+            fill: 'rgba(0, 113, 183, 0.15)',
+            stroke: 'rgba(0, 113, 183, 0.5)',
+            'stroke-width': 1,
+          });
+          chartSvg.appendChild(sector);
+        }
+      }
+      // ---- CENTER CIRCLE ----
+      const centerCircle = svgEl('circle', {
+        cx: CX, cy: CY, r: R_CENTER,
+        fill: '#ffffff',
+        stroke: '#d8dce4',
+        'stroke-width': 1,
+      });
+      chartSvg.appendChild(centerCircle);
+
+      // ---- HOUSE CUSPS ----
+      for (let i = 0; i < 12; i++) {
+        const angle = 180 + i * 30;
+        const x1 = CX + R_CENTER * Math.cos(deg2rad(angle));
+        const y1 = CY - R_CENTER * Math.sin(deg2rad(angle));
+        const x2 = CX + R_SIGN_INNER * Math.cos(deg2rad(angle));
+        const y2 = CY - R_SIGN_INNER * Math.sin(deg2rad(angle));
+        const line = svgEl('line', {
+          x1, y1, x2, y2,
+          stroke: '#d0d5de',
+          'stroke-width': 1,
+        });
+        chartSvg.appendChild(line);
+      }
+
+      // ---- SIGN BOUNDARIES ----
+      for (let i = 0; i < 12; i++) {
+        const angle = 180 + i * 30;
+        const x1 = CX + R_SIGN_INNER * Math.cos(deg2rad(angle));
+        const y1 = CY - R_SIGN_INNER * Math.sin(deg2rad(angle));
+        const x2 = CX + R_OUTER * Math.cos(deg2rad(angle));
+        const y2 = CY - R_OUTER * Math.sin(deg2rad(angle));
+        const line = svgEl('line', {
+          x1, y1, x2, y2,
+          stroke: '#d0d5de',
+          'stroke-width': 1,
+        });
+        chartSvg.appendChild(line);
+      }
+
+      // ---- AXIS LABELS ----
+      const axisLabels = [
+        { text: 'ASC', angle: 180, r: R_OUTER + 2, anchor: 'end' },
+        { text: 'DSC', angle: 0, r: R_OUTER + 2, anchor: 'start' },
+        { text: 'MC', angle: 90, r: R_OUTER + 2, anchor: 'middle', dy: -6 },
+        { text: 'IC', angle: 270, r: R_OUTER + 2, anchor: 'middle', dy: 14 },
+      ];
+      axisLabels.forEach(al => {
+        const x = CX + al.r * Math.cos(deg2rad(al.angle));
+        const y = CY - al.r * Math.sin(deg2rad(al.angle));
+        let dx = 0;
+        if (al.anchor === 'end') dx = -6;
+        if (al.anchor === 'start') dx = 6;
+        const label = svgEl('text', {
+          x: x + dx, y: y + (al.dy || 0),
+          'text-anchor': al.anchor,
+          'dominant-baseline': 'central',
+          fill: '#8a92a2',
+          'font-size': '11',
+          'font-weight': '600',
+          'font-family': "'Plus Jakarta Sans', sans-serif",
+          'letter-spacing': '0.05em',
+        });
+        label.textContent = al.text;
+        chartSvg.appendChild(label);
+      });
+
+      // ---- PLANET PLACEMENT (inner circle) ----
+      const houseIndex = result.house;
+      const planetAngle = 180 + houseIndex * 30 + 15;
+      const planetR = R_CENTER + 0.6 * (R_HOUSE_INNER - R_CENTER);
+      const px = CX + planetR * Math.cos(deg2rad(planetAngle));
+      const py = CY - planetR * Math.sin(deg2rad(planetAngle));
+
+      // Planet background circle
+      const planetBg = svgEl('circle', {
+        cx: px, cy: py, r: 18,
+        fill: 'rgba(0, 113, 183, 0.08)',
+        stroke: '#0071b7',
+        'stroke-width': 1.5,
+      });
+      chartSvg.appendChild(planetBg);
+
+      // Planet symbol
+      const planetLabel = svgEl('text', {
+        x: px, y: py,
+        'text-anchor': 'middle',
+        'dominant-baseline': 'central',
+        fill: '#0071b7',
+        'font-size': '20',
+        'font-weight': '700',
+        'font-family': "'AstroSymbol', 'Plus Jakarta Sans', sans-serif",
+      });
+      planetLabel.textContent = PLANETS[result.planet].symbol;
+      chartSvg.appendChild(planetLabel);
+
+    }
+
+    /* ============================================
+       SVG HELPERS
+       ============================================ */
+    function svgEl(tag, attrs) {
+      const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      if (attrs) {
+        for (const [k, v] of Object.entries(attrs)) {
+          el.setAttribute(k, v);
+        }
+      }
+      return el;
+    }
+
+    function deg2rad(deg) {
+      return (deg * Math.PI) / 180;
+    }
+
+    function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
+      const startRad = deg2rad(startAngle);
+      const endRad = deg2rad(endAngle);
+
+      const x1 = cx + rOuter * Math.cos(startRad);
+      const y1 = cy - rOuter * Math.sin(startRad);
+      const x2 = cx + rOuter * Math.cos(endRad);
+      const y2 = cy - rOuter * Math.sin(endRad);
+      const x3 = cx + rInner * Math.cos(endRad);
+      const y3 = cy - rInner * Math.sin(endRad);
+      const x4 = cx + rInner * Math.cos(startRad);
+      const y4 = cy - rInner * Math.sin(startRad);
+
+      let angleDiff = startAngle - endAngle;
+      if (angleDiff < 0) angleDiff += 360;
+      const largeArc = angleDiff > 180 ? 1 : 0;
+
+      return [
+        `M ${x1} ${y1}`,
+        `A ${rOuter} ${rOuter} 0 ${largeArc} 1 ${x2} ${y2}`,
+        `L ${x3} ${y3}`,
+        `A ${rInner} ${rInner} 0 ${largeArc} 0 ${x4} ${y4}`,
+        'Z'
+      ].join(' ');
+    }
+
+    /* ============================================
+       HISTORY
+       ============================================ */
+    function getHistory() {
+      try {
+        return JSON.parse(localStorage.getItem('astro_dice_history') || '[]');
+      } catch { return []; }
+    }
+
+    function saveHistory(result) {
+      const history = getHistory();
+      history.unshift(result);
+      if (history.length > 10) history.length = 10;
+      localStorage.setItem('astro_dice_history', JSON.stringify(history));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const history = getHistory();
+      if (history.length === 0) {
+        historyList.innerHTML = '<div class="empty-history">尚無紀錄</div>';
+        return;
+      }
+
+      historyList.innerHTML = history.map((item, idx) => {
+        const p = PLANETS[item.planet];
+        const s = SIGNS[item.sign];
+        const h = HOUSES[item.house];
+        const time = new Date(item.timestamp);
+        const timeStr = `${time.getMonth() + 1}/${time.getDate()} ${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`;
+        return `
+      <div class="history-item" data-idx="${idx}" onclick="loadHistory(${idx})">
+        <span class="hi-result">${p.symbol} ${p.name} ・ ${s.symbol} ${s.name} ・ ${h.name}</span>
+        <span class="hi-time">${timeStr}</span>
+      </div>`;
+      }).join('');
+    }
+
+    function loadHistory(idx) {
+      const history = getHistory();
+      if (!history[idx]) return;
+      const result = history[idx];
+      currentResult = result;
+
+      dfPlanet.textContent = PLANETS[result.planet].symbol;
+      dfSign.textContent = SIGNS[result.sign].symbol;
+      dfHouse.textContent = HOUSES[result.house].label;
+      dnPlanet.textContent = PLANETS[result.planet].name;
+      dnSign.textContent = SIGNS[result.sign].name;
+      dnHouse.textContent = HOUSES[result.house].name;
+      dcPlanet.classList.add('active');
+      dcSign.classList.add('active');
+      dcHouse.classList.add('active');
+
+      showResult(result);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    clearHistoryBtn.addEventListener('click', () => {
+      localStorage.removeItem('astro_dice_history');
+      renderHistory();
+    });
+
+    renderHistory();
+  </script>
+</body>
+
+</html>
