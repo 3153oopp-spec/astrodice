@@ -643,7 +643,7 @@
     <!-- Header -->
     <header class="app-header">
       <h1>占星骰</h1>
-      <p>擲出行星、星座、宮位，繪製你的星盤</p>
+      <p>擲出行星、星座、宮位，讓星空給你答案</p>
     </header>
 
     <!-- Dice -->
@@ -967,7 +967,7 @@
       initShareBtn.style.display = 'inline-flex';
       shareForm.style.display = 'none';
       shareQuestion.value = '';
-      doShareBtn.textContent = '確認分享';
+      doShareBtn.textContent = '點我分享結果';
 
       const ascIdx = ((result.sign) - (result.house) + 12) % 12;
       const ascSign = SIGNS[ascIdx];
