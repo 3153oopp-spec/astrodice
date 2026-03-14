@@ -579,6 +579,97 @@
     /* ============================================
    RESPONSIVE
    ============================================ */
+    /* ============================================
+   SHARE MODAL (NEW)
+   ============================================ */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+      padding: 1rem;
+    }
+
+    .modal-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-content {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 400px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-md);
+      transform: translateY(20px);
+      transition: transform 0.3s;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .modal-overlay.show .modal-content {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .modal-title {
+      font-family: var(--font-heading);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-heading);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.5rem;
+      line-height: 1;
+      padding: 0;
+      transition: color 0.2s;
+    }
+
+    .modal-close:hover {
+      color: var(--text-heading);
+    }
+
+    .modal-textarea {
+      width: 100%;
+      height: 120px;
+      padding: 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      color: var(--text-heading);
+      resize: vertical;
+      background: var(--bg-section);
+    }
+    
+    .modal-textarea:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
     @media (max-width: 768px) {
       .content-grid {
         grid-template-columns: 1fr;
@@ -701,10 +792,6 @@
           </svg>
           分享結果
         </button>
-        <div class="share-form" id="share-form">
-          <input type="text" class="share-input" id="share-question" placeholder="你問了什麼問題？(選填)">
-          <button class="roll-btn" id="do-share-btn" type="button" style="width: 100%; justify-content: center; padding: 0.7rem;">確認分享</button>
-        </div>
       </div>
     </section>
 
@@ -772,6 +859,25 @@
           <div class="empty-history" id="empty-history">尚無紀錄</div>
         </div>
       </section>
+    </div>
+  </div>
+
+  <!-- Share Modal -->
+  <div class="modal-overlay" id="share-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">分享占星骰結果</h3>
+        <button class="modal-close" id="close-modal-btn">&times;</button>
+      </div>
+      <input type="text" class="share-input" id="share-question" placeholder="你問了什麼問題？(選填)">
+      <textarea class="modal-textarea" id="share-textarea" readonly></textarea>
+      <button class="roll-btn" id="copy-share-btn" type="button" style="width: 100%; justify-content: center;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        複製結果
+      </button>
     </div>
   </div>
 
@@ -866,9 +972,7 @@
     const emptyHistory = document.getElementById('empty-history');
     const clearHistoryBtn = document.getElementById('clear-history-btn');
     const initShareBtn = document.getElementById('init-share-btn');
-    const shareForm = document.getElementById('share-form');
     const shareQuestion = document.getElementById('share-question');
-    const doShareBtn = document.getElementById('do-share-btn');
 
     /* ============================================
        ROLL LOGIC
@@ -965,9 +1069,7 @@
 
       // Reset Share UI
       initShareBtn.style.display = 'inline-flex';
-      shareForm.style.display = 'none';
       shareQuestion.value = '';
-      doShareBtn.textContent = '點我分享結果';
 
       const ascIdx = ((result.sign) - (result.house) + 12) % 12;
       const ascSign = SIGNS[ascIdx];
@@ -1328,15 +1430,14 @@
     });
 
     /* ============================================
-       SHARE LOGIC
+       SHARE LOGIC (MODAL)
        ============================================ */
-    initShareBtn.addEventListener('click', () => {
-      initShareBtn.style.display = 'none';
-      shareForm.style.display = 'flex';
-      shareQuestion.focus();
-    });
+    const shareModal = document.getElementById('share-modal');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const shareTextarea = document.getElementById('share-textarea');
+    const copyShareBtn = document.getElementById('copy-share-btn');
 
-    doShareBtn.addEventListener('click', async () => {
+    function updateShareText() {
       if (!currentResult) return;
       
       const p = PLANETS[currentResult.planet];
@@ -1351,31 +1452,83 @@
       shareText += `🔮 我的占星骰結果：\n`;
       shareText += `${p.symbol} ${p.name} ・ ${s.symbol} ${s.name} ・ ${h.name}\n`;
       
-      const shareData = {
-        title: '占星骰結果',
-        text: shareText
+      shareTextarea.value = shareText;
+    }
+
+    initShareBtn.addEventListener('click', () => {
+      // 顯示 Modal 前先更新一次文字
+      updateShareText();
+      shareModal.classList.add('show');
+      
+      // Focus 輸入框
+      setTimeout(() => {
+        shareQuestion.focus();
+      }, 100);
+    });
+
+    shareQuestion.addEventListener('input', updateShareText);
+
+    // 關閉 Modal
+    function closeModal() {
+      shareModal.classList.remove('show');
+    }
+
+    closeModalBtn.addEventListener('click', closeModal);
+    shareModal.addEventListener('click', (e) => {
+      if (e.target === shareModal) {
+        closeModal();
+      }
+    });
+
+    // 複製結果邏輯
+    copyShareBtn.addEventListener('click', async () => {
+      if (!currentResult) return;
+      const shareText = shareTextarea.value;
+
+      const showSuccess = () => {
+        const originalHTML = copyShareBtn.innerHTML;
+        copyShareBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          已複製！
+        `;
+        copyShareBtn.style.backgroundColor = '#10b981'; // 綠色成功提示
+        
+        setTimeout(() => {
+          copyShareBtn.innerHTML = originalHTML;
+          copyShareBtn.style.backgroundColor = '';
+        }, 2000);
       };
 
-      try {
-        if (navigator.share) {
-          await navigator.share(shareData);
-        } else {
-          try {
-            await navigator.clipboard.writeText(shareText);
-            const originalText = doShareBtn.textContent;
-            doShareBtn.textContent = '已複製到剪貼簿！';
-            setTimeout(() => {
-              if (doShareBtn.textContent === '已複製到剪貼簿！') {
-                doShareBtn.textContent = originalText;
-              }
-            }, 2000);
-          } catch (clipErr) {
-            console.error('Clipboard copy failed:', clipErr);
-          }
+      // 1. Try modern Clipboard API
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+          await navigator.clipboard.writeText(shareText);
+          showSuccess();
+          return;
+        } catch (clipErr) {
+          console.log('Clipboard API failed:', clipErr);
         }
-      } catch (err) {
-        console.error('Share failed:', err);
       }
+
+      // 2. Fallback to textarea select and execCommand
+      try {
+        shareTextarea.select();
+        shareTextarea.setSelectionRange(0, 99999); // For mobile devices
+        const successful = document.execCommand('copy');
+        if (successful) {
+          showSuccess();
+          // Deselect text after copying
+          window.getSelection().removeAllRanges();
+          return;
+        }
+      } catch (fallbackErr) {
+        console.log('Fallback clipboard failed:', fallbackErr);
+      }
+
+      // 3. Ultimate fallback
+      alert("無法自動複製，請手動長按上方文字區塊進行複製！");
     });
 
     renderHistory();
