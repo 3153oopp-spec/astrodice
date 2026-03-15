@@ -584,15 +584,12 @@
    ============================================ */
     .modal-overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       background: rgba(0, 0, 0, 0.5);
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 1000;
+      z-index: 9999;
       opacity: 0;
       visibility: hidden;
       transition: opacity 0.3s, visibility 0.3s;
@@ -871,12 +868,18 @@
       </div>
       <input type="text" class="share-input" id="share-question" placeholder="你問了什麼問題？(選填)">
       <textarea class="modal-textarea" id="share-textarea" readonly></textarea>
+      
+      <div id="share-feedback" style="display:none; color: #10b981; font-weight: 600; font-size: 0.9rem; text-align: center;">✓ 已複製到剪貼簿！</div>
+
       <button class="roll-btn" id="copy-share-btn" type="button" style="width: 100%; justify-content: center;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;">
+          <circle cx="18" cy="5" r="3"></circle>
+          <circle cx="6" cy="12" r="3"></circle>
+          <circle cx="18" cy="19" r="3"></circle>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
         </svg>
-        複製結果
+        確認分享
       </button>
     </div>
   </div>
@@ -1436,6 +1439,7 @@
     const closeModalBtn = document.getElementById('close-modal-btn');
     const shareTextarea = document.getElementById('share-textarea');
     const copyShareBtn = document.getElementById('copy-share-btn');
+    const shareFeedback = document.getElementById('share-feedback');
 
     function updateShareText() {
       if (!currentResult) return;
@@ -1456,7 +1460,11 @@
     }
 
     initShareBtn.addEventListener('click', () => {
-      // 顯示 Modal 前先更新一次文字
+      // 每次開啟前重置輸入框與 feedback
+      shareQuestion.value = '';
+      shareFeedback.style.display = 'none';
+      
+      // 更新顯示文字
       updateShareText();
       shareModal.classList.add('show');
       
@@ -1466,7 +1474,10 @@
       }, 100);
     });
 
-    shareQuestion.addEventListener('input', updateShareText);
+    shareQuestion.addEventListener('input', () => {
+      shareFeedback.style.display = 'none'; // 修改時隱藏 feedback
+      updateShareText();
+    });
 
     // 關閉 Modal
     function closeModal() {
@@ -1480,28 +1491,39 @@
       }
     });
 
+    // 按下 Escape 鍵關閉
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && shareModal.classList.contains('show')) {
+        closeModal();
+      }
+    });
+
     // 複製結果邏輯
     copyShareBtn.addEventListener('click', async () => {
       if (!currentResult) return;
       const shareText = shareTextarea.value;
+      const titleText = '占星骰結果';
 
       const showSuccess = () => {
-        const originalHTML = copyShareBtn.innerHTML;
-        copyShareBtn.innerHTML = `
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-          已複製！
-        `;
-        copyShareBtn.style.backgroundColor = '#10b981'; // 綠色成功提示
-        
-        setTimeout(() => {
-          copyShareBtn.innerHTML = originalHTML;
-          copyShareBtn.style.backgroundColor = '';
-        }, 2000);
+        shareFeedback.style.display = 'block';
       };
 
-      // 1. Try modern Clipboard API
+      // 1. 優先試圖使用 native share API
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: titleText,
+            text: shareText
+          });
+          return; // 成功分享，直接返回
+        } catch (shareErr) {
+          console.log('Native share failed or cancelled:', shareErr);
+          if (shareErr.name === 'AbortError') return; // 使用者主動取消，不作動作
+          // 若其他錯誤導致無法呼叫，則 fallback 繼續執行剪貼簿邏輯
+        }
+      }
+
+      // 2. 剪貼簿 fallback
       if (navigator.clipboard && navigator.clipboard.writeText) {
         try {
           await navigator.clipboard.writeText(shareText);
@@ -1512,14 +1534,13 @@
         }
       }
 
-      // 2. Fallback to textarea select and execCommand
+      // 3. Fallback to textarea select and execCommand
       try {
         shareTextarea.select();
         shareTextarea.setSelectionRange(0, 99999); // For mobile devices
         const successful = document.execCommand('copy');
         if (successful) {
           showSuccess();
-          // Deselect text after copying
           window.getSelection().removeAllRanges();
           return;
         }
@@ -1527,8 +1548,8 @@
         console.log('Fallback clipboard failed:', fallbackErr);
       }
 
-      // 3. Ultimate fallback
-      alert("無法自動複製，請手動長按上方文字區塊進行複製！");
+      // 4. 若以上皆失敗
+      alert("無法自動複製，請手動長按文字區塊進行複製！");
     });
 
     renderHistory();
